@@ -2,8 +2,6 @@
 import numpy as np
 import pandas as pd
 import xlrd
-#from plydata import define
-#from plydata.expressions import case_when
 
 # Importar Dados
 data = pd.read_excel("D:\OneDrive\Documentos OK\Python Scripts\WIOD_SEA_Nov16 (2).xlsx", sheet_name='DATA')
