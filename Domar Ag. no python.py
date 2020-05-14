@@ -2,8 +2,8 @@
 import numpy as np
 import pandas as pd
 import xlrd
-from plydata import define
-from plydata.expressions import case_when
+#from plydata import define
+#from plydata.expressions import case_when
 
 # Importar Dados
 data = pd.read_excel("D:\OneDrive\Documentos OK\Python Scripts\WIOD_SEA_Nov16 (2).xlsx", sheet_name='DATA')
@@ -56,4 +56,5 @@ year = [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 
 infla = pd.DataFrame({'year': year, 'infla': infla})
 infla['infla'] = infla['infla'] / 100
 df_Bra = pd.merge(df_Bra, infla, on='year')
+X=0
 # Criar variáveis necessárias
