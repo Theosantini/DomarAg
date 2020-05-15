@@ -54,5 +54,23 @@ year = [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 
 infla = pd.DataFrame({'year': year, 'infla': infla})
 infla['infla'] = infla['infla'] / 100
 df_Bra = pd.merge(df_Bra, infla, on='year')
-X=0
 # Criar variáveis necessárias
+# df_Bra.loc[df_Bra.groupby('code')['GO_QI'],'gGO_QI'] = np.log(df_Bra.GO_QI) - np.log(df_Bra.GO_QI.shift(1))
+# teste
+x = np.array([1, 2, 3,5,6])
+
+
+def gr(x):
+    c = []
+    for i in range(len(x)):
+        c.append(np.log(x[i]) - np.log(x[i-1]))
+    return c
+
+def it(x):
+    c = []
+    for i in range(len(x)):
+        c.append(0.5*(x[i]+x[i-1]))
+    return c
+
+print(gr(x))
+print(it(x))
