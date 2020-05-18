@@ -1,4 +1,6 @@
 # Escrever código da tese em python
+from typing import List, Any
+
 import numpy as np
 import pandas as pd
 import xlrd
@@ -54,23 +56,23 @@ year = [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 
 infla = pd.DataFrame({'year': year, 'infla': infla})
 infla['infla'] = infla['infla'] / 100
 df_Bra = pd.merge(df_Bra, infla, on='year')
-# Criar variáveis necessárias
-# df_Bra.loc[df_Bra.groupby('code')['GO_QI'],'gGO_QI'] = np.log(df_Bra.GO_QI) - np.log(df_Bra.GO_QI.shift(1))
-# teste
-x = np.array([1, 2, 3,5,6])
 
-
+# Criar variáveis necessárias ([1]taxas de crescimento e [2] shares nominais)
+# [1] taxas de crescimento
 def gr(x):
     c = []
     for i in range(len(x)):
-        c.append(np.log(x[i]) - np.log(x[i-1]))
+        if i == 0:
+            c.append(0)
+        else:
+            c.append(np.log(x.values[i]) - np.log(x.values[i-1]))
     return c
 
-def it(x):
-    c = []
-    for i in range(len(x)):
-        c.append(0.5*(x[i]+x[i-1]))
-    return c
+df_Bra['gGO_QI'] = df_Bra.groupby('code')["GO_QI"].transform(gr)
+df_Bra['gH_EMPE'] = df_Bra.groupby('code')["H_EMPE"].transform(gr)
+df_Bra['gKinom'] = df_Bra.groupby('code')["K"].transform(gr)
+df_Bra['gQji'] = df_Bra.groupby('code')["II_QI"].transform(gr)
+df_Bra['gVi'] = df_Bra.groupby('code')["VA_QI"].transform(gr)
+df_Bra['gKi'] = ((1+df_Bra['gKinom'])/(1+df_Bra['infla'])-1)
 
-print(gr(x))
-print(it(x))
+# [2] shares nominais
