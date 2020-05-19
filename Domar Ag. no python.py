@@ -57,22 +57,51 @@ infla = pd.DataFrame({'year': year, 'infla': infla})
 infla['infla'] = infla['infla'] / 100
 df_Bra = pd.merge(df_Bra, infla, on='year')
 
-# Criar variáveis necessárias ([1]taxas de crescimento e [2] shares nominais)
-# [1] taxas de crescimento
+
+# Criar variáveis necessárias ([1] shares nominais e [2] taxas de crescimento)
+# [1] shares nominais
+def sn(x):
+    c = []
+    for i in range(len(x)):
+        if i == 0:
+            c.append(0)
+        else:
+            c.append(0.5 * (x.values[i] + x.values[i - 1]))
+    return c
+
+
+df_Bra['vinfla'] = df_Bra.groupby('code')["infla"].transform(sn)
+df_Bra['vPIB'] = df_Bra.groupby('code')["PIB"].transform(sn)
+df_Bra['vVA'] = df_Bra.groupby('code')["VA"].transform(sn)
+df_Bra['vLAB'] = df_Bra.groupby('code')["LAB"].transform(sn)
+df_Bra['vII'] = df_Bra.groupby('code')["II"].transform(sn)
+df_Bra['vCAP'] = df_Bra.groupby('code')["CAP"].transform(sn)
+df_Bra['vGO'] = df_Bra.groupby('code')["GO"].transform(sn)
+
+
+# [2] taxas de crescimento
 def gr(x):
     c = []
     for i in range(len(x)):
         if i == 0:
             c.append(0)
         else:
-            c.append(np.log(x.values[i]) - np.log(x.values[i-1]))
+            c.append(np.log(x.values[i]) - np.log(x.values[i - 1]))
     return c
+
 
 df_Bra['gGO_QI'] = df_Bra.groupby('code')["GO_QI"].transform(gr)
 df_Bra['gH_EMPE'] = df_Bra.groupby('code')["H_EMPE"].transform(gr)
 df_Bra['gKinom'] = df_Bra.groupby('code')["K"].transform(gr)
 df_Bra['gQji'] = df_Bra.groupby('code')["II_QI"].transform(gr)
 df_Bra['gVi'] = df_Bra.groupby('code')["VA_QI"].transform(gr)
-df_Bra['gKi'] = ((1+df_Bra['gKinom'])/(1+df_Bra['infla'])-1)
+df_Bra['gKi'] = ((1 + df_Bra['gKinom']) / (1 + df_Bra['vinfla']) - 1)
 
-# [2] shares nominais
+# substituir Nas por 0 e Calcular produtividades em novo dataframe
+
+df_Bra = df_Bra.fillna(0)
+df_Bra_Prodi = df_Bra[df_Bra['year']>2000]
+df_Bra_Prodi['ProdSec'] = df_Bra_Prodi.gGO_QI - (df_Bra_Prodi.vLAB/df_Bra_Prodi.vGO)*df_Bra_Prodi.gH_EMPE - \
+                          (df_Bra_Prodi.vCAP/df_Bra_Prodi.vGO)*df_Bra_Prodi.gKi - (df_Bra_Prodi.vII/df_Bra_Prodi.vGO)*df_Bra_Prodi.gQji
+
+# Tabelas de produtividade (Domar) por macrosetor
