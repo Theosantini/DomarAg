@@ -1,11 +1,11 @@
 # Escrever código da tese em python
-from typing import List, Any
-
+from typing import List, Any, Union
 import numpy as np
 import pandas as pd
-import xlrd
 
 # Importar Dados
+from pandas import DataFrame, Series
+
 data = pd.read_excel("D:\OneDrive\Documentos OK\Python Scripts\WIOD_SEA_Nov16 (2).xlsx", sheet_name='DATA')
 df = pd.DataFrame(data)
 # Filtrar para Brasil
@@ -77,6 +77,7 @@ df_Bra['vLAB'] = df_Bra.groupby('code')["LAB"].transform(sn)
 df_Bra['vII'] = df_Bra.groupby('code')["II"].transform(sn)
 df_Bra['vCAP'] = df_Bra.groupby('code')["CAP"].transform(sn)
 df_Bra['vGO'] = df_Bra.groupby('code')["GO"].transform(sn)
+df_Bra['vGO10'] = df_Bra.groupby('dezsec')['vGO'].transform('sum')
 
 
 # [2] taxas de crescimento
@@ -100,8 +101,20 @@ df_Bra['gKi'] = ((1 + df_Bra['gKinom']) / (1 + df_Bra['vinfla']) - 1)
 # substituir Nas por 0 e Calcular produtividades em novo dataframe
 
 df_Bra = df_Bra.fillna(0)
-df_Bra_Prodi = df_Bra[df_Bra['year']>2000]
-df_Bra_Prodi['ProdSec'] = df_Bra_Prodi.gGO_QI - (df_Bra_Prodi.vLAB/df_Bra_Prodi.vGO)*df_Bra_Prodi.gH_EMPE - \
-                          (df_Bra_Prodi.vCAP/df_Bra_Prodi.vGO)*df_Bra_Prodi.gKi - (df_Bra_Prodi.vII/df_Bra_Prodi.vGO)*df_Bra_Prodi.gQji
+df_Bra_Prodi = df_Bra[df_Bra['year'] > 2000]
+df_Bra_Prodi['ProdSec'] = df_Bra_Prodi.gGO_QI - (df_Bra_Prodi.vLAB / df_Bra_Prodi.vGO) * df_Bra_Prodi.gH_EMPE - \
+                          (df_Bra_Prodi.vCAP / df_Bra_Prodi.vGO) * df_Bra_Prodi.gKi - (
+                                      df_Bra_Prodi.vII / df_Bra_Prodi.vGO) * df_Bra_Prodi.gQji
 
-# Tabelas de produtividade (Domar) por macrosetor
+# Tabelas de produtividade (Domar) por 10-macrosetores
+df_Bra_Prodi['VA_GDP'] = df_Bra_Prodi.vVA / df_Bra_Prodi.vPIB
+df_Bra_Prodi['II_GDP'] = df_Bra_Prodi.vII / df_Bra_Prodi.vPIB
+df_Bra_Prodi['D_Weight'] = df_Bra_Prodi.vGO / df_Bra_Prodi.vPIB
+df_Bra_Prodi['MFP10'] = df_Bra_Prodi.ProdSec * (df_Bra_Prodi.vGO / df_Bra_Prodi.vGO10)
+
+df_Bra_Prodi10 = df_Bra_Prodi.groupby(['dezsec', 'year'])[['VA_GDP', 'II_GDP', 'D_Weight', 'MFP10']].agg(sum)
+
+df_Bra_Prodi10mean = df_Bra_Prodi10.groupby('dezsec')[['VA_GDP', 'II_GDP', 'D_Weight', 'MFP10']].agg("mean")
+
+# Separar entre 2000 a 2008 e 2009 a 2014
+
