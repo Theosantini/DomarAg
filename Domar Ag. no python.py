@@ -56,7 +56,7 @@ df2 = df_Bra.groupby('year')['VA'].sum()
 df2 = pd.DataFrame(df2).reset_index()
 df2.rename(columns={'VA': 'PIB'}, inplace=True)
 df_Bra = pd.merge(df_Bra, df2, on='year')
-'''
+
 # Adicionar inflação do período
 
 infla = [9.52, 10.23, 27.66, 6.95, 11.87, 1.42, 3.64, 8.19, 8.57, -0.94, 11.28, 4.64, 8.10, 5.57, 3.92]
@@ -67,6 +67,7 @@ df_Bra = pd.merge(df_Bra, infla, on='year')
 
 
 # Criar variáveis necessárias ([1] shares nominais e [2] taxas de crescimento)
+
 # [1] shares nominais
 
 def sn(x):
@@ -86,7 +87,7 @@ df_Bra['vLAB'] = df_Bra.groupby('code')["LAB"].transform(sn)
 df_Bra['vII'] = df_Bra.groupby('code')["II"].transform(sn)
 df_Bra['vCAP'] = df_Bra.groupby('code')["CAP"].transform(sn)
 df_Bra['vGO'] = df_Bra.groupby('code')["GO"].transform(sn)
-df_Bra['vGO10'] = df_Bra.groupby('dezsec')['vGO'].transform('sum')
+df_Bra['vGO10'] = df_Bra.groupby(['dezsec', 'year'])['vGO'].transform('sum')
 
 
 # [2] taxas de crescimento
@@ -105,7 +106,6 @@ df_Bra['gGO_QI'] = df_Bra.groupby('code')["GO_QI"].transform(gr)
 df_Bra['gH_EMPE'] = df_Bra.groupby('code')["H_EMPE"].transform(gr)
 df_Bra['gKinom'] = df_Bra.groupby('code')["K"].transform(gr)
 df_Bra['gQji'] = df_Bra.groupby('code')["II_QI"].transform(gr)
-df_Bra['gVi'] = df_Bra.groupby('code')["VA_QI"].transform(gr)
 df_Bra['gKi'] = ((1 + df_Bra['gKinom']) / (1 + df_Bra['vinfla']) - 1)
 
 # substituir Nas por 0 e Calcular produtividades em novo dataframe
@@ -115,6 +115,10 @@ df_Bra_Prodi = df_Bra[df_Bra['year'] > 2000]
 df_Bra_Prodi['ProdSec'] = df_Bra_Prodi.gGO_QI - (df_Bra_Prodi.vLAB / df_Bra_Prodi.vGO) * df_Bra_Prodi.gH_EMPE - \
                           (df_Bra_Prodi.vCAP / df_Bra_Prodi.vGO) * df_Bra_Prodi.gKi - (
                                       df_Bra_Prodi.vII / df_Bra_Prodi.vGO) * df_Bra_Prodi.gQji
+df_Bra_Prodi['gVi'] = (df_Bra_Prodi.vGO/(df_Bra_Prodi.vLAB+df_Bra_Prodi.vCAP))*df_Bra_Prodi.ProdSec + \
+                      (df_Bra_Prodi.vLAB/(df_Bra_Prodi.vLAB+df_Bra_Prodi.vCAP))*df_Bra_Prodi.gH_EMPE + \
+                      (df_Bra_Prodi.vCAP/(df_Bra_Prodi.vLAB+df_Bra_Prodi.vCAP))*df_Bra_Prodi.gKi
+
 
 # Tabelas de produtividade (Domar) por 10-macrosetores
 
@@ -123,10 +127,10 @@ df_Bra_Prodi['II_GDP'] = df_Bra_Prodi.vII / df_Bra_Prodi.vPIB
 df_Bra_Prodi['D_Weight'] = df_Bra_Prodi.vGO / df_Bra_Prodi.vPIB
 df_Bra_Prodi['MFP10'] = df_Bra_Prodi.ProdSec * (df_Bra_Prodi.vGO / df_Bra_Prodi.vGO10)
 
-df_Bra_Prodi10 = df_Bra_Prodi.groupby(['dezsec', 'year'])[['VA_GDP', 'II_GDP', 'D_Weight', 'MFP10']].agg(sum)
+df_Bra_Prodi10 = df_Bra_Prodi.groupby(['dezsec', 'year'])[['VA_GDP', 'II_GDP', 'D_Weight', 'MFP10']].agg(sum).reset_index()
 
-df_Bra_Prodi10mean = df_Bra_Prodi10.groupby('dezsec')[['VA_GDP', 'II_GDP', 'D_Weight', 'MFP10']].agg("mean")
-
+df_Bra_Prodi10mean = df_Bra_Prodi10.groupby('dezsec')[['VA_GDP', 'II_GDP', 'D_Weight', 'MFP10']].agg("mean").reset_index()
+'''
 # Separar entre 2000 a 2008 e 2009 a 2014
 
 '''
