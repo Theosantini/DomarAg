@@ -130,7 +130,12 @@ df_Bra_Prodi['MFP10'] = df_Bra_Prodi.ProdSec * (df_Bra_Prodi.vGO / df_Bra_Prodi.
 df_Bra_Prodi10 = df_Bra_Prodi.groupby(['dezsec', 'year'])[['VA_GDP', 'II_GDP', 'D_Weight', 'MFP10']].agg(sum).reset_index()
 
 df_Bra_Prodi10mean = df_Bra_Prodi10.groupby('dezsec')[['VA_GDP', 'II_GDP', 'D_Weight', 'MFP10']].agg("mean").reset_index()
-'''
+
 # Separar entre 2000 a 2008 e 2009 a 2014
 
-'''
+df_Bra_Prodi10mean0a8 = df_Bra_Prodi10[df_Bra_Prodi10.year<2009].groupby('dezsec')[['VA_GDP', 'II_GDP', 'D_Weight', 'MFP10']].agg("mean").reset_index()
+
+df_Bra_Prodi10mean9a14 = df_Bra_Prodi10[df_Bra_Prodi10.year>2008].groupby('dezsec')[['VA_GDP', 'II_GDP', 'D_Weight', 'MFP10']].agg("mean").reset_index()
+
+# Tabelas de fontes de insumos para produto bruto e para valor adicionado
+
