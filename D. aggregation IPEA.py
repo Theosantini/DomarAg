@@ -59,6 +59,6 @@ dados = pd.concat([dadosn,dadosr], ignore_index=False, axis=1)
 
 # Adicionar inflação e calcular variação real do estoque de capital
 
-# Calcular PIB nominal anual
+# Calcular PIB nominal anuall
 
 
