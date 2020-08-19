@@ -28,7 +28,7 @@ dadosn = (dadosn[dadosn.Variáveis.isin(var)]
                       'Remunerações' : 'vLi', 'Valor adicionado bruto ( PIB )' : 'vVA',
                       'Valor da produção' : 'vQi'})
                .assign(vKi = lambda x: x.vVA - x.vLi)
-               .assign(nKi = lambda x: x.vVA - x.vKi +x.vLi)) # estoque de capital (fictício)
+               .assign(nKi = lambda x: x.vVA - x.vKi +x.vLi)) # estoque de capital (fictício) ver como fazer
 
 
 ### Importar matrizes de insumo-produto valores constantes
@@ -51,7 +51,7 @@ dadosr = (dadosr[dadosr.Variáveis.isin(var)]
                .pivot_table(index=["Ano", "Setores"], columns="Variáveis", values="value")
                .reset_index()
                .rename(columns = {'CI' : 'rQji',
-                      'Valor da produção' : 'rQ'}))
+                      'Valor da produção' : 'rQi'}))
 
 ### Juntar dadosn e dadosr no mesmo dataframe
 
@@ -59,7 +59,7 @@ dados = pd.merge(dadosn,dadosr, on=['Ano','Setores'])
 
 # Agregar setores em 10 ou 12
 
-# Adicionar inflação (IGP-DI) e calcular variação real do estoque de capital
+# Adicionar inflação (IGP-DI) para calcular variação real do estoque de capital
 
 Infla = [9.52, 10.23, 27.66, 6.95, 11.87, 1.42, 3.64, 8.19,
          8.57, -0.94, 11.28, 4.64, 8.10, 5.57, 3.92, 11.17, 6.6, -0.35]
@@ -78,7 +78,7 @@ dados = pd.merge(dados, Infla, on='Ano')
 dados['PIB'] = dados.groupby('Ano')['vVA'].transform(sum)
 
 # Funções necessárias para calcular produtividade (MFP) setorial
-#([1] shares nominais e [2] taxas de crescimento)
+## ([1] shares nominais e [2] taxas de crescimento)
 
 # [1] shares nominais
 
@@ -102,5 +102,37 @@ def gr(x):
             c.append(np.log(x.values[i]) - np.log(x.values[i - 1]))
     return c
 
-# Aplicar funções para produzir variáveis necessárias
+# Aplicar funções para produzir variáveis necessárias nominais e reais
 
+# Nominais
+
+dados['svinfla'] = dados.groupby('Setores')["Infla"].transform(sn)
+dados['svPIB'] = dados.groupby('Setores')["PIB"].transform(sn)
+dados['svVA'] = dados.groupby('Setores')["vVA"].transform(sn)
+dados['svLi'] = dados.groupby('Setores')["vLi"].transform(sn)
+dados['svQji'] = dados.groupby('Setores')["vQji"].transform(sn)
+dados['svKi'] = dados.groupby('Setores')["vKi"].transform(sn)
+dados['svQi'] = dados.groupby('Setores')["vQi"].transform(sn)
+
+# Nominais
+
+dados['grQi'] = dados.groupby('Setores')["rQi"].transform(gr)
+dados['grLi'] = dados.groupby('Setores')["rLi"].transform(gr)
+dados['gnKin'] = dados.groupby('Setores')["nKi"].transform(gr)
+dados['grQji'] = dados.groupby('Setores')["rQji"].transform(gr)
+dados['grKi'] = ((1 + dados['gnKin']) / (1 + dados['svinfla']) - 1)
+
+"""
+# Calcular produtividades em novo dataframe
+
+df_Bra_Prodi = df_Bra[df_Bra['year'] > 2000]
+df_Bra_Prodi['ProdSec'] = df_Bra_Prodi.gGO_QI - (df_Bra_Prodi.vLAB / df_Bra_Prodi.vGO) * df_Bra_Prodi.gH_EMPE - \
+                          (df_Bra_Prodi.vCAP / df_Bra_Prodi.vGO) * df_Bra_Prodi.gKi - (
+                                      df_Bra_Prodi.vII / df_Bra_Prodi.vGO) * df_Bra_Prodi.gQji
+df_Bra_Prodi['gVi'] = (df_Bra_Prodi.vGO/(df_Bra_Prodi.vLAB+df_Bra_Prodi.vCAP))*df_Bra_Prodi.ProdSec + \
+                      (df_Bra_Prodi.vLAB/(df_Bra_Prodi.vLAB+df_Bra_Prodi.vCAP))*df_Bra_Prodi.gH_EMPE + \
+                      (df_Bra_Prodi.vCAP/(df_Bra_Prodi.vLAB+df_Bra_Prodi.vCAP))*df_Bra_Prodi.gKi
+
+# Calcular e mostrar Domar weights no tempo e taxa de crescimento da produtividade setorial e agregada                      
+
+"""
